@@ -1,0 +1,758 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTSW-7000-28F-DC-DC — Interactive Financial Model</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        colors: {
+          ink:'#071A2B', navy:'#0B2D4D', electric:'#0072CE', cyan:'#00A8E8',
+          ice:'#EAF5FB', mist:'#F5F8FA', positive:'#158F72', caution:'#D49A16', negative:'#C74B50'
+        }
+      }}
+    };
+  </script>
+  <style>
+    :root{
+      --bg:#f4f7f9;--panel:#fff;--panel2:#edf4f8;--text:#071a2b;--muted:#667b8b;
+      --line:#dbe5ea;--blue:#0072ce;--cyan:#00a8e8;--navy:#0b2d4d;
+      --good:#158f72;--warn:#d49a16;--bad:#c74b50;
+    }
+    .dark{
+      --bg:#07131f;--panel:#0d2133;--panel2:#102a40;--text:#f4f8fb;--muted:#9eb1bf;
+      --line:#213b50;--blue:#39a9ff;--cyan:#43d4ff;--navy:#07131f;
+      --good:#37c69a;--warn:#f2bc49;--bad:#ff7f86;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;background:
+      radial-gradient(circle at 85% 0%,rgba(0,114,206,.10),transparent 32rem),
+      var(--bg);color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;font-feature-settings:"tnum" 1,"lnum" 1
+    }
+    .panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 30px rgba(7,26,43,.06)}
+    .subpanel{background:var(--panel2);border:1px solid var(--line)}
+    .muted{color:var(--muted)} .hairline{border-color:var(--line)}
+    .eyebrow{letter-spacing:.13em;text-transform:uppercase;font-size:.67rem;font-weight:700;color:var(--blue)}
+    .slider{--pct:50%;appearance:none;width:100%;height:4px;border-radius:999px;outline:none;
+      background:linear-gradient(to right,var(--blue) 0%,var(--blue) var(--pct),var(--line) var(--pct),var(--line) 100%)}
+    .slider::-webkit-slider-thumb{appearance:none;width:17px;height:17px;border-radius:50%;background:#fff;border:4px solid var(--blue);
+      box-shadow:0 2px 7px rgba(0,0,0,.18);cursor:pointer}
+    .slider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:4px solid var(--blue);
+      box-shadow:0 2px 7px rgba(0,0,0,.18);cursor:pointer}
+    .scenario-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 7px 18px rgba(0,114,206,.22)}
+    .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .metric{min-height:132px;position:relative;overflow:hidden}
+    .metric:after{content:"";position:absolute;right:-34px;top:-34px;width:88px;height:88px;border-radius:50%;
+      background:rgba(0,114,206,.06)}
+    .good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .good-bg{background:rgba(21,143,114,.11);color:var(--good)}
+    .warn-bg{background:rgba(212,154,22,.12);color:var(--warn)}
+    .bad-bg{background:rgba(199,75,80,.11);color:var(--bad)}
+    .table-num{text-align:right;font-variant-numeric:tabular-nums}
+    .sticky-head th{position:sticky;top:0;z-index:1;background:var(--panel2)}
+    .delta-pos{color:var(--good)}.delta-neg{color:var(--bad)}.delta-neutral{color:var(--muted)}
+    .soft-grid{background-image:linear-gradient(to right,rgba(120,145,160,.06) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(120,145,160,.06) 1px,transparent 1px);background-size:28px 28px}
+    .mobile-collapsed .controls-body{display:none}
+    @media(min-width:1024px){.mobile-collapsed .controls-body{display:block}}
+    @media print{aside,#actions,.scenario-editor{display:none!important}main{width:100%!important}.panel{box-shadow:none}}
+  </style>
+</head>
+<body>
+<div class="min-h-screen">
+
+  <header class="sticky top-0 z-40 border-b hairline backdrop-blur-xl" style="background:color-mix(in srgb,var(--panel) 93%,transparent)">
+    <div class="max-w-[1800px] mx-auto px-4 lg:px-6 py-3">
+      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div>
+          <div class="eyebrow">Interactive investment model · 2025–2027</div>
+          <div class="flex items-baseline gap-3 mt-1">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">RTSW-7000-28F-DC-DC</h1>
+            <span class="hidden md:inline muted text-sm">финансовая модель продукта</span>
+          </div>
+        </div>
+        <div id="actions" class="flex flex-wrap gap-2 items-center">
+          <div class="flex gap-1 p-1 rounded-xl border hairline" style="background:var(--panel2)">
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Downside">Downside</button>
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Base">Base</button>
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Upside">Upside</button>
+          </div>
+          <button id="resetBtn" class="px-3 py-2 rounded-xl border hairline text-sm font-medium">Сбросить все параметры</button>
+          <button id="exportBtn" class="px-3 py-2 rounded-xl text-white text-sm font-medium" style="background:var(--navy)">Экспорт JSON</button>
+          <button id="themeBtn" class="w-10 h-10 rounded-xl border hairline" title="Светлая / тёмная тема">◐</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-[1800px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-[350px_minmax(0,1fr)] gap-5">
+
+    <aside id="controls" class="panel rounded-2xl lg:sticky lg:top-[92px] lg:max-h-[calc(100vh-108px)] lg:overflow-auto mobile-collapsed">
+      <button id="mobileToggle" class="lg:hidden w-full p-4 flex justify-between font-semibold border-b hairline">
+        <span>Параметры модели</span><span id="mobileMark">＋</span>
+      </button>
+      <div class="controls-body">
+        <div class="p-4 border-b hairline">
+          <div class="eyebrow">Постоянные параметры</div>
+          <p class="text-xs muted mt-1">Изменение общих параметров мгновенно пересчитывает все три сценария.</p>
+        </div>
+        <div id="constantSliders" class="p-4 space-y-5"></div>
+
+        <div class="scenario-editor p-4 border-t hairline">
+          <div class="flex justify-between items-start">
+            <div><div class="eyebrow">Сценарные параметры</div><div id="scenarioEditorTitle" class="font-semibold mt-1"></div></div>
+            <button id="scenarioEditorToggle" class="text-xs muted">Свернуть</button>
+          </div>
+          <div id="scenarioSliders" class="space-y-5 mt-4"></div>
+        </div>
+
+        <div class="p-4 border-t hairline text-xs">
+          <div class="font-semibold mb-2">Контроль платежных условий</div>
+          <div id="paymentControl" class="muted leading-relaxed"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 space-y-5">
+      <section class="panel rounded-2xl p-5 md:p-6 soft-grid">
+        <div class="grid lg:grid-cols-[1.2fr_.8fr] gap-5">
+          <div>
+            <div class="eyebrow">Executive view</div>
+            <h2 id="heroTitle" class="text-2xl md:text-3xl font-semibold mt-2 tracking-tight"></h2>
+            <p id="heroText" class="muted mt-3 leading-relaxed max-w-4xl"></p>
+          </div>
+          <div class="subpanel rounded-xl p-4">
+            <div class="text-xs uppercase tracking-widest muted font-semibold">Инвесторский вывод</div>
+            <div id="investorConclusion" class="mt-2 text-sm leading-relaxed"></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="flex justify-between items-end mb-3">
+          <div><div class="eyebrow">Ключевые показатели</div><h3 class="text-lg font-semibold mt-1">Инвестиционная экономика</h3></div>
+          <div id="perf" class="text-xs muted"></div>
+        </div>
+        <div id="metricCards" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3"></div>
+      </section>
+
+      <section class="panel rounded-2xl overflow-hidden">
+        <div class="p-3 border-b hairline flex flex-wrap gap-2">
+          <button class="tab-btn active px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="pl">P&L</button>
+          <button class="tab-btn px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="cf">Cash Flow</button>
+          <button class="tab-btn px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="compare">Сравнение сценариев</button>
+        </div>
+
+        <div id="tab-pl" class="tab-content p-4 md:p-5 space-y-5">
+          <div class="subpanel rounded-xl px-4 py-3 text-xs muted">
+            Платёжные доли и сроки не меняют P&L по методу начисления, но модель всё равно полностью пересчитывает P&L и CF для каждого сценария.
+            Их экономический эффект проявляется в ликвидности, NPV, IRR, потребности в инвестициях и окупаемости.
+          </div>
+          <div class="grid xl:grid-cols-2 gap-5">
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Выручка и прибыль</div>
+              <div class="text-xs muted mt-1">Все ряды в рублях, одна шкала</div>
+              <div class="h-[320px] mt-3"><canvas id="plChart"></canvas></div>
+            </div>
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Waterfall 2027</div>
+              <div class="text-xs muted mt-1">От выручки к чистой прибыли</div>
+              <div class="h-[320px] mt-3"><canvas id="waterfallChart"></canvas></div>
+            </div>
+          </div>
+          <div class="overflow-auto rounded-xl border hairline">
+            <table class="w-full text-sm">
+              <thead class="sticky-head"><tr><th class="p-3 text-left">P&L</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
+              <tbody id="plTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-cf" class="tab-content hidden p-4 md:p-5 space-y-5">
+          <div class="grid xl:grid-cols-[1.35fr_.65fr] gap-5">
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Кумулятивный Cash Flow</div>
+              <div class="text-xs muted mt-1">Помесячный расчёт с лагами платежей и точкой окупаемости</div>
+              <div class="h-[360px] mt-3"><canvas id="cashChart"></canvas></div>
+            </div>
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Ликвидность</div>
+              <div id="liquiditySummary" class="mt-4"></div>
+            </div>
+          </div>
+          <div class="overflow-auto rounded-xl border hairline">
+            <table class="w-full text-sm">
+              <thead class="sticky-head"><tr><th class="p-3 text-left">Cash Flow</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
+              <tbody id="cfTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-compare" class="tab-content hidden p-4 md:p-5 space-y-5">
+          <div class="grid xl:grid-cols-2 gap-5">
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Сравнение сценариев</div>
+              <div class="text-xs muted mt-1">NPV и чистая прибыль 2027</div>
+              <div class="h-[320px] mt-3"><canvas id="scenarioChart"></canvas></div>
+            </div>
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Чувствительность NPV Base</div>
+              <div class="text-xs muted mt-1">Tornado: изменение каждого драйвера на ±10%</div>
+              <div class="h-[430px] mt-3"><canvas id="sensitivityChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="grid xl:grid-cols-[.85fr_1.15fr] gap-5">
+            <div class="subpanel rounded-xl p-4">
+              <div class="font-semibold">Что если</div>
+              <div class="text-xs muted mt-1">Дельта текущих результатов к исходным вводным выбранного сценария</div>
+              <div id="whatIf" class="mt-4"></div>
+            </div>
+            <div class="overflow-auto rounded-xl border hairline">
+              <table class="w-full text-sm">
+                <thead class="sticky-head"><tr><th class="p-3 text-left">Показатель</th><th class="p-3 table-num">Downside</th><th class="p-3 table-num">Base</th><th class="p-3 table-num">Upside</th></tr></thead>
+                <tbody id="scenarioTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel rounded-2xl p-4 md:p-5">
+        <div class="eyebrow">Методология</div>
+        <p class="text-sm muted mt-2 leading-relaxed">
+          Реализуемый объём ограничивается производственной мощностью; изменение конверсии масштабирует объём относительно базовых 85%.
+          Производственный цикл масштабирует эффективную месячную мощность относительно базовых 20 дней.
+          Потребность в инвестициях равна максимальному отрицательному накопленному CF.
+          NPV рассчитывается при 20%, IRR — по тем же денежным потокам.
+          Авансовые платежи, попавшие на выходной, сдвигаются на предыдущую пятницу; финальные — на следующий понедельник.
+          Платежи, которые по графику должны были произойти до 01.01.2025, отражаются 01.01.2025 как стартовая потребность/источник финансирования.
+        </p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1. MODEL_DATA — все исходные данные модели
+   ========================================================= */
+const MODEL_DATA = {
+  constants:{
+    bomCNY:1500, sfpCogsRUB:20000, royaltyPct:0.05,
+    capacityMonthly:360, conversion:0.85, productionCycleDays:20,
+    buyerAdvancePct:0.40, buyerAdvanceDays:80,
+    buyerFinalPct:0.60, buyerFinalDays:15,
+    supplierAdvancePct:0.70, supplierAdvanceDays:100,
+    supplierFinalPct:0.30,
+    opex2025:1000000, opexGrowth:0.05
+  },
+  fixed:{
+    taxRate:0.25, capex:0, discountRate:0.20,
+    seasonality:[0.15,0.22,0.30,0.33],
+    startCash:0,startAR:0,startAP:0,startInventory:0,
+    baseConversion:0.85, baseProductionCycleDays:20,
+    modelStart:"2025-01-01"
+  },
+  scenarios:{
+    Downside:{
+      volume:[2850,2280,2394], asp:[50000,47500,50000], fx:[11.1592,13.5,14.5],
+      description:"Давление на цену и спрос при ослаблении рубля."
+    },
+    Base:{
+      volume:[2850,3135,3449], asp:[50000,55000,60500], fx:[11.1592,12.4,13.02],
+      description:"Умеренный рост операторского спроса и индексация цены."
+    },
+    Upside:{
+      volume:[2850,3420,4104], asp:[50000,60000,66000], fx:[11.1592,11.5,11.5],
+      description:"Ускорение продаж, более высокая цена и стабильный рубль."
+    }
+  }
+};
+
+const YEARS=[2025,2026,2027];
+const MONTHS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+
+const PARAM_DEFS=[
+  {key:"bomCNY",label:"BOM коммутатора",unit:"CNY/шт.",min:700,max:2600,step:50,fmt:"n"},
+  {key:"sfpCogsRUB",label:"COGS SFP-комплекта",unit:"руб./шт.",min:8000,max:40000,step:2000,fmt:"rub"},
+  {key:"royaltyPct",label:"Роялти",unit:"% выручки",min:0,max:.12,step:.01,fmt:"pct"},
+  {key:"capacityMonthly",label:"Производственная мощность",unit:"шт./мес.",min:150,max:600,step:10,fmt:"n"},
+  {key:"conversion",label:"Конверсия заказов в поставки",unit:"%",min:.50,max:1,step:.05,fmt:"pct"},
+  {key:"productionCycleDays",label:"Производственный цикл",unit:"дней",min:10,max:45,step:1,fmt:"n"},
+  {key:"buyerAdvancePct",label:"Аванс покупателя",unit:"%",min:.10,max:.90,step:.01,fmt:"pct",pair:"buyerFinalPct"},
+  {key:"buyerAdvanceDays",label:"Срок аванса покупателя",unit:"дней до отгрузки",min:0,max:150,step:1,fmt:"n"},
+  {key:"buyerFinalPct",label:"Финальный платеж покупателя",unit:"%",min:.10,max:.90,step:.01,fmt:"pct",pair:"buyerAdvancePct"},
+  {key:"buyerFinalDays",label:"Срок финального платежа покупателя",unit:"дней после отгрузки",min:0,max:90,step:1,fmt:"n"},
+  {key:"supplierAdvancePct",label:"Аванс поставщику BOM и SFP",unit:"%",min:.10,max:.95,step:.01,fmt:"pct",pair:"supplierFinalPct"},
+  {key:"supplierAdvanceDays",label:"Срок аванса поставщику",unit:"дней до отгрузки",min:0,max:180,step:1,fmt:"n"},
+  {key:"supplierFinalPct",label:"Финальный платеж поставщику",unit:"%",min:.05,max:.90,step:.01,fmt:"pct",pair:"supplierAdvancePct"},
+  {key:"opex2025",label:"Постоянные OPEX 2025",unit:"руб./год",min:0,max:5000000,step:100000,fmt:"rub"},
+  {key:"opexGrowth",label:"Рост OPEX",unit:"% г/г",min:0,max:.20,step:.01,fmt:"pct"}
+];
+
+const SCENARIO_DEFS=[
+  {kind:"volume",label:"Объём продаж",fmt:"n",step:10,minFactor:.5,maxFactor:1.6},
+  {kind:"asp",label:"ASP",fmt:"rub",step:500,minFactor:.65,maxFactor:1.55},
+  {kind:"fx",label:"CNY/RUB",fmt:"fx",step:.1,minFactor:.65,maxFactor:1.5}
+];
+
+let state={
+  scenario:"Base",
+  constants:structuredClone(MODEL_DATA.constants),
+  scenarios:structuredClone(MODEL_DATA.scenarios),
+  theme:localStorage.getItem("rtsw-theme")||"light"
+};
+
+const nf0=new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat("ru-RU",{minimumFractionDigits:1,maximumFractionDigits:1});
+const pf1=new Intl.NumberFormat("ru-RU",{style:"percent",minimumFractionDigits:1,maximumFractionDigits:1});
+const dateFmt=new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"});
+
+function money(v,compact=true){
+  if(!Number.isFinite(v))return "—";
+  const s=v<0?"−":"",a=Math.abs(v);
+  if(compact&&a>=1e9)return s+nf1.format(a/1e9)+" млрд ₽";
+  if(compact&&a>=1e6)return s+nf1.format(a/1e6)+" млн ₽";
+  if(compact&&a>=1e3)return s+nf1.format(a/1e3)+" тыс. ₽";
+  return s+nf0.format(a)+" ₽";
+}
+function fmt(v,t,u=""){
+  if(t==="pct")return pf1.format(v);
+  if(t==="rub")return nf0.format(v)+" ₽";
+  if(t==="fx")return Number(v).toFixed(2);
+  return nf0.format(v)+(u?" "+u:"");
+}
+function metricFmt(v,t){
+  if(t==="rub")return money(v);
+  if(t==="pct")return pf1.format(v);
+  if(t==="months")return Number.isFinite(v)?Math.round(v)+" мес.":"> 36 мес.";
+  if(t==="date")return v?dateFmt.format(v):"не достигнута";
+  return nf0.format(v);
+}
+function dPct(c,b){return !Number.isFinite(b)||Math.abs(b)<1e-9?null:c/b-1}
+function dText(d){return d===null||!Number.isFinite(d)||Math.abs(d)<.0005?"без изменений":(d>0?"+":"")+pf1.format(d)}
+function dClass(d,inverse=false){if(d===null||!Number.isFinite(d)||Math.abs(d)<.0005)return"delta-neutral";return (inverse?d<0:d>0)?"delta-pos":"delta-neg"}
+function css(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
+
+function utc(y,m,d){return new Date(Date.UTC(y,m,d))}
+function addDays(d,n){const x=new Date(d);x.setUTCDate(x.getUTCDate()+n);return x}
+function monthEnd(y,m1){return new Date(Date.UTC(y,m1,0))}
+function prevFriday(d){const x=new Date(d),w=x.getUTCDay();if(w===6)x.setUTCDate(x.getUTCDate()-1);if(w===0)x.setUTCDate(x.getUTCDate()-2);return x}
+function nextMonday(d){const x=new Date(d),w=x.getUTCDay();if(w===6)x.setUTCDate(x.getUTCDate()+2);if(w===0)x.setUTCDate(x.getUTCDate()+1);return x}
+function maxDate(a,b){return a>b?a:b}
+
+function npv(rate,flows){return flows.reduce((s,x,i)=>s+x/Math.pow(1+rate,i+1),0)}
+function irr(flows){
+  const f=r=>flows.reduce((s,x,i)=>s+x/Math.pow(1+r,i),0);
+  let lo=-.9999,hi=1,flo=f(lo),fhi=f(hi),k=0;
+  while(flo*fhi>0&&k<35){hi*=2;fhi=f(hi);k++}
+  if(flo*fhi>0)return NaN;
+  for(let i=0;i<140;i++){const mid=(lo+hi)/2,fm=f(mid);if(Math.abs(fm)<1e-6)return mid;if(flo*fm<=0){hi=mid;fhi=fm}else{lo=mid;flo=fm}}
+  return (lo+hi)/2;
+}
+
+/* =========================================================
+   2. calculateModel(params) — единая функция расчёта
+   ========================================================= */
+function calculateModel(params){
+  const c=params.constants,sc=params.scenarioData,F=MODEL_DATA.fixed;
+  const modelStart=new Date(F.modelStart+"T00:00:00Z");
+
+  // Плановый объём сценария задан при базовой конверсии 85%.
+  const convFactor=c.conversion/F.baseConversion;
+  // Более короткий производственный цикл увеличивает эффективную месячную мощность.
+  const effCapacityMonthly=c.capacityMonthly*(F.baseProductionCycleDays/c.productionCycleDays);
+  const annualCapacity=effCapacityMonthly*12;
+
+  const pl=YEARS.map((year,i)=>{
+    const demand=sc.volume[i]*convFactor;
+    const volume=Math.min(demand,annualCapacity);
+    const asp=sc.asp[i],fx=sc.fx[i];
+    const revenue=volume*asp;
+    const bomUnit=c.bomCNY*fx;
+    const bom=volume*bomUnit;
+    const sfp=volume*c.sfpCogsRUB;
+    const royalty=revenue*c.royaltyPct;
+    const totalCogs=bom+sfp+royalty;
+    const grossProfit=revenue-totalCogs;
+    const opex=c.opex2025*Math.pow(1+c.opexGrowth,i);
+    const ebit=grossProfit-opex;
+    const tax=ebit*F.taxRate; // ровно по заданной формуле
+    const netIncome=ebit-tax;
+    return{
+      year,plannedVolume:sc.volume[i],volume,annualCapacity,capacityUtil:volume/annualCapacity,
+      asp,fx,revenue,bomUnit,bom,sfp,royalty,totalCogs,grossProfit,
+      grossMargin:revenue?grossProfit/revenue:0,opex,ebit,
+      operatingMargin:revenue?ebit/revenue:0,tax,netIncome,
+      netMargin:revenue?netIncome/revenue:0
+    };
+  });
+
+  // Денежные события. Связанные доли аванса/финального платежа используются непосредственно здесь.
+  const events=[];
+  const add=(date,type,amount)=>events.push({date,type,amount});
+
+  YEARS.forEach((year,yi)=>{
+    for(let month=1;month<=12;month++){
+      const q=Math.floor((month-1)/3),share=F.seasonality[q]/3,p=pl[yi];
+      const vol=p.volume*share,revenue=vol*p.asp,bom=vol*p.bomUnit,sfp=vol*c.sfpCogsRUB,royalty=revenue*c.royaltyPct;
+      const ship=monthEnd(year,month);
+
+      // Покупатель: аванс -> предыдущая пятница; финальный платёж -> следующий понедельник.
+      let buyerAdv=prevFriday(addDays(ship,-c.buyerAdvanceDays));
+      buyerAdv=maxDate(buyerAdv,modelStart);
+      add(buyerAdv,"customer",revenue*c.buyerAdvancePct);
+
+      let buyerFinal=nextMonday(addDays(ship,c.buyerFinalDays));
+      add(buyerFinal,"customer",revenue*c.buyerFinalPct);
+
+      // Поставщик: аванс -> предыдущая пятница; финальный платёж в дату поставки, при выходном -> понедельник.
+      let suppAdv=prevFriday(addDays(ship,-c.supplierAdvanceDays));
+      suppAdv=maxDate(suppAdv,modelStart);
+      add(suppAdv,"bom",-bom*c.supplierAdvancePct);
+      add(suppAdv,"sfp",-sfp*c.supplierAdvancePct);
+
+      const suppFinal=nextMonday(ship);
+      add(suppFinal,"bom",-bom*c.supplierFinalPct);
+      add(suppFinal,"sfp",-sfp*c.supplierFinalPct);
+
+      add(nextMonday(ship),"royalty",-royalty);
+    }
+    const yearEnd=nextMonday(utc(year,11,31));
+    add(yearEnd,"opex",-pl[yi].opex);
+    add(yearEnd,"tax",-pl[yi].tax);
+  });
+
+  // Помесячная сетка 2025–2027.
+  const monthly=[];let cumulative=F.startCash;
+  YEARS.forEach(year=>{
+    for(let month=1;month<=12;month++){
+      const start=utc(year,month-1,1),next=month===12?utc(year+1,0,1):utc(year,month,1);
+      const ev=events.filter(e=>e.date>=start&&e.date<next);
+      const s=t=>ev.filter(e=>e.type===t).reduce((a,e)=>a+e.amount,0);
+      const receipts=s("customer"),bom=s("bom"),sfp=s("sfp"),royalty=s("royalty"),opex=s("opex"),tax=s("tax");
+      const operatingCF=receipts+bom+sfp+royalty+opex+tax;
+      cumulative+=operatingCF;
+      monthly.push({date:start,year,month,receipts,bom,sfp,royalty,opex,tax,operatingCF,netCF:operatingCF,cumulative});
+    }
+  });
+
+  const annualCF=YEARS.map(year=>{
+    const rows=monthly.filter(x=>x.year===year),sum=k=>rows.reduce((a,x)=>a+x[k],0);
+    return{year,receipts:sum("receipts"),bom:sum("bom"),sfp:sum("sfp"),royalty:sum("royalty"),opex:sum("opex"),
+      tax:sum("tax"),operatingCF:sum("operatingCF"),investingCF:0,financingCF:0,netCF:sum("netCF")};
+  });
+
+  const minCash=Math.min(0,...monthly.map(x=>x.cumulative));
+  const investmentNeed=Math.max(0,-minCash);
+
+  // CF инвестора: сначала покрывает начальную потребность, затем получает/теряет месячный CF проекта.
+  let invCum=-investmentNeed,paybackIndex=-1;
+  const investorCum=monthly.map((x,i)=>{
+    invCum+=x.netCF;
+    if(paybackIndex<0&&invCum>=0)paybackIndex=i;
+    return invCum;
+  });
+
+  const opCF=annualCF.map(x=>x.operatingCF);
+  const NPV=-investmentNeed+npv(F.discountRate,opCF);
+  const IRR=irr([-investmentNeed,...opCF]);
+  const revenueCAGR=Math.pow(pl[2].revenue/pl[0].revenue,1/2)-1;
+
+  return{
+    pl,monthly,annualCF,investorCum,
+    metrics:{
+      investmentNeed,npv:NPV,irr:IRR,
+      paybackMonths:paybackIndex>=0?paybackIndex+1:Infinity,
+      paybackDate:paybackIndex>=0?monthly[paybackIndex].date:null,
+      grossMargin2027:pl[2].grossMargin,
+      operatingMargin2027:pl[2].operatingMargin,
+      netIncome2027:pl[2].netIncome,revenueCAGR,
+      endingCash:monthly.at(-1).cumulative,minCash
+    },
+    checks:{
+      buyerTotal:c.buyerAdvancePct+c.buyerFinalPct,
+      supplierTotal:c.supplierAdvancePct+c.supplierFinalPct,
+      capacityBinding:pl.some((x,i)=>x.volume+1e-6<sc.volume[i]*convFactor)
+    }
+  };
+}
+
+function paramsFor(s=state.scenario){return{constants:state.constants,scenarioData:state.scenarios[s]}}
+function defaultParams(s){return{constants:structuredClone(MODEL_DATA.constants),scenarioData:structuredClone(MODEL_DATA.scenarios[s])}}
+
+let baselines={};["Downside","Base","Upside"].forEach(s=>baselines[s]=calculateModel(defaultParams(s)));
+let charts={},lastResults=null;
+
+/* =========================================================
+   3. UI sliders
+   ========================================================= */
+function sliderHTML(def,value,id,suffix=""){
+  const p=(value-def.min)/(def.max-def.min)*100;
+  return`<div>
+    <div class="flex justify-between gap-3 mb-2">
+      <div class="text-sm font-medium leading-tight">${def.label}${suffix}</div>
+      <div class="text-xs font-semibold whitespace-nowrap" style="color:var(--blue)" data-v="${id}">${fmt(value,def.fmt,def.unit)}</div>
+    </div>
+    <input id="${id}" type="range" class="slider" min="${def.min}" max="${def.max}" step="${def.step}" value="${value}" style="--pct:${p}%">
+    <div class="flex justify-between text-[10px] muted mt-1"><span>${fmt(def.min,def.fmt,def.unit)}</span><span>${fmt(def.max,def.fmt,def.unit)}</span></div>
+  </div>`;
+}
+function paintSlider(el,def,value){
+  const p=(value-def.min)/(def.max-def.min)*100;el.style.setProperty("--pct",Math.max(0,Math.min(100,p))+"%");
+  const n=document.querySelector(`[data-v="${el.id}"]`);if(n)n.textContent=fmt(value,def.fmt,def.unit);
+}
+
+function buildConstants(){
+  document.getElementById("constantSliders").innerHTML=PARAM_DEFS.map(d=>sliderHTML(d,state.constants[d.key],"p-"+d.key)).join("");
+  PARAM_DEFS.forEach(def=>{
+    const el=document.getElementById("p-"+def.key);
+    el.addEventListener("input",()=>{
+      const v=Number(el.value);
+      state.constants[def.key]=v;
+
+      // КЛЮЧЕВАЯ ЛОГИКА: связанные бегунки всегда дают 100%.
+      if(def.pair){
+        state.constants[def.pair]=1-v;
+        const pd=PARAM_DEFS.find(x=>x.key===def.pair),pe=document.getElementById("p-"+def.pair);
+        if(pe){pe.value=state.constants[def.pair];paintSlider(pe,pd,state.constants[def.pair])}
+      }
+      paintSlider(el,def,v);updateAll();
+    });
+  });
+}
+function buildScenarioSliders(){
+  const s=state.scenario,sc=state.scenarios[s];
+  document.getElementById("scenarioEditorTitle").textContent=s;
+  let html="";
+  SCENARIO_DEFS.forEach(def=>YEARS.forEach((y,i)=>{
+    const base=MODEL_DATA.scenarios[s][def.kind][i];
+    const min=def.kind==="fx"?Math.max(5,Math.floor(base*def.minFactor*10)/10):Math.floor(base*def.minFactor/def.step)*def.step;
+    const max=def.kind==="fx"?Math.ceil(base*def.maxFactor*10)/10:Math.ceil(base*def.maxFactor/def.step)*def.step;
+    html+=sliderHTML({...def,min,max,unit:def.kind==="fx"?"руб./CNY":def.kind==="asp"?"руб./шт.":"шт."},sc[def.kind][i],`s-${def.kind}-${i}`,` · ${y}`);
+  }));
+  document.getElementById("scenarioSliders").innerHTML=html;
+  SCENARIO_DEFS.forEach(def=>YEARS.forEach((y,i)=>{
+    const base=MODEL_DATA.scenarios[s][def.kind][i];
+    const min=def.kind==="fx"?Math.max(5,Math.floor(base*def.minFactor*10)/10):Math.floor(base*def.minFactor/def.step)*def.step;
+    const max=def.kind==="fx"?Math.ceil(base*def.maxFactor*10)/10:Math.ceil(base*def.maxFactor/def.step)*def.step;
+    const local={...def,min,max,unit:def.kind==="fx"?"руб./CNY":def.kind==="asp"?"руб./шт.":"шт."};
+    const el=document.getElementById(`s-${def.kind}-${i}`);
+    el.addEventListener("input",()=>{state.scenarios[state.scenario][def.kind][i]=Number(el.value);paintSlider(el,local,Number(el.value));updateAll()});
+  }));
+}
+
+/* =========================================================
+   4. Tables / cards
+   ========================================================= */
+function row(label,vals,opt={}){
+  return`<tr class="border-t hairline ${opt.bold?"font-semibold":""}" ${opt.section?'style="background:var(--panel2)"':""}>
+    <td class="p-3 ${opt.indent?"pl-6":""}">${label}</td>
+    ${vals.map(v=>`<td class="p-3 table-num">${opt.pct?pf1.format(v):money(v,false)}</td>`).join("")}</tr>`;
+}
+function updatePL(res){
+  const p=res.pl;
+  document.getElementById("plTable").innerHTML=[
+    row("Выручка",p.map(x=>x.revenue),{bold:true}),
+    `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Себестоимость</td></tr>`,
+    row("BOM коммутатора",p.map(x=>x.bom),{indent:true}),
+    row("SFP COGS",p.map(x=>x.sfp),{indent:true}),
+    row("Роялти",p.map(x=>x.royalty),{indent:true}),
+    row("Итого COGS",p.map(x=>x.totalCogs),{bold:true}),
+    row("Валовая прибыль",p.map(x=>x.grossProfit),{bold:true}),
+    row("Gross Margin",p.map(x=>x.grossMargin),{pct:true}),
+    `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Операционные расходы</td></tr>`,
+    row("Постоянные OPEX",p.map(x=>x.opex),{indent:true}),
+    row("EBIT",p.map(x=>x.ebit),{bold:true}),
+    row("Operating Margin",p.map(x=>x.operatingMargin),{pct:true}),
+    row("Налог",p.map(x=>x.tax)),
+    row("Чистая прибыль",p.map(x=>x.netIncome),{bold:true}),
+    row("Net Margin",p.map(x=>x.netMargin),{pct:true})
+  ].join("");
+}
+function updateCF(res){
+  const c=res.annualCF;
+  document.getElementById("cfTable").innerHTML=[
+    row("Поступления от покупателей",c.map(x=>x.receipts),{bold:true}),
+    row("Оплата BOM поставщику",c.map(x=>x.bom)),
+    row("Оплата SFP поставщику",c.map(x=>x.sfp)),
+    row("Роялти",c.map(x=>x.royalty)),
+    row("OPEX",c.map(x=>x.opex)),
+    row("Налог",c.map(x=>x.tax)),
+    row("Чистый операционный CF",c.map(x=>x.operatingCF),{bold:true}),
+    `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Инвестиционная деятельность</td></tr>`,
+    row("CAPEX",[0,0,0]),row("Чистый инвестиционный CF",[0,0,0],{bold:true}),
+    row("Net Cash Flow",c.map(x=>x.netCF),{bold:true})
+  ].join("");
+  document.getElementById("liquiditySummary").innerHTML=[
+    ["Минимальный cash balance",money(res.metrics.minCash),res.metrics.minCash<0?"bad":"good"],
+    ["Потребность в инвестициях",money(res.metrics.investmentNeed),res.metrics.investmentNeed>15000000?"bad":"warn"],
+    ["Cash на конец 2027",money(res.metrics.endingCash),res.metrics.endingCash>0?"good":"bad"],
+    ["Окупаемость",metricFmt(res.metrics.paybackMonths,"months"),res.metrics.paybackMonths<=18?"good":"warn"],
+    ["Месяц окупаемости",metricFmt(res.metrics.paybackDate,"date"),res.metrics.paybackDate?"good":"bad"]
+  ].map(([l,v,s])=>`<div class="flex justify-between gap-3 py-2 border-b hairline"><span class="muted text-sm">${l}</span><b class="${s} text-sm">${v}</b></div>`).join("");
+}
+function status(key,v){
+  if(key==="npv")return v>30000000?"good":v>0?"warn":"bad";
+  if(key==="irr")return v>.5?"good":v>.2?"warn":"bad";
+  if(key==="payback")return v<=18?"good":v<=30?"warn":"bad";
+  if(key==="investment")return v<10000000?"good":v<20000000?"warn":"bad";
+  if(key==="gm")return v>.25?"good":v>.15?"warn":"bad";
+  if(key==="om")return v>.2?"good":v>.1?"warn":"bad";
+  return v>0?"good":"bad";
+}
+function updateCards(res){
+  const b=baselines[state.scenario];
+  const arr=[
+    ["npv","NPV",res.metrics.npv,"rub",b.metrics.npv,false],
+    ["irr","IRR",res.metrics.irr,"pct",b.metrics.irr,false],
+    ["payback","Окупаемость",res.metrics.paybackMonths,"months",b.metrics.paybackMonths,true],
+    ["investment","Потребность в инвестициях",res.metrics.investmentNeed,"rub",b.metrics.investmentNeed,true],
+    ["gm","Gross Margin 2027",res.metrics.grossMargin2027,"pct",b.metrics.grossMargin2027,false],
+    ["om","Operating Margin 2027",res.metrics.operatingMargin2027,"pct",b.metrics.operatingMargin2027,false],
+    ["ni","Чистая прибыль 2027",res.metrics.netIncome2027,"rub",b.metrics.netIncome2027,false]
+  ];
+  document.getElementById("metricCards").innerHTML=arr.map(([k,l,v,t,bv,inv])=>{
+    const d=dPct(v,bv),s=status(k,v),badge=s==="good"?"good-bg":s==="bad"?"bad-bg":"warn-bg";
+    return`<div class="metric panel rounded-xl p-4">
+      <div class="flex justify-between gap-2"><span class="text-[11px] uppercase tracking-wider font-semibold muted">${l}</span>
+      <span class="text-[10px] px-2 py-1 rounded-full ${badge}">${s==="good"?"сильный":s==="bad"?"риск":"внимание"}</span></div>
+      <div class="text-xl xl:text-2xl font-semibold mt-4">${metricFmt(v,t)}</div>
+      <div class="text-xs mt-3 ${dClass(d,inv)}">Δ к исходному: ${dText(d)}</div></div>`;
+  }).join("");
+}
+
+/* =========================================================
+   5. Sensitivity
+   ========================================================= */
+function sensitivity(){
+  const base={constants:structuredClone(state.constants),scenarioData:structuredClone(MODEL_DATA.scenarios.Base)};
+  const b=calculateModel(base).metrics.npv,tests=[];
+  const test=(label,fn)=>{
+    const lo=structuredClone(base),hi=structuredClone(base);fn(lo,-.10);fn(hi,.10);
+    const a=calculateModel(lo).metrics.npv-b,z=calculateModel(hi).metrics.npv-b;
+    tests.push({label,low:Math.min(a,z),high:Math.max(a,z),spread:Math.abs(z-a)});
+  };
+  PARAM_DEFS.forEach(def=>test(def.label,(p,d)=>{
+    let v=p.constants[def.key]*(1+d);
+    v=Math.max(def.min,Math.min(def.max,v));p.constants[def.key]=v;
+    if(def.pair)p.constants[def.pair]=1-v;
+  }));
+  ["volume","asp","fx"].forEach(kind=>test({volume:"Объём продаж (Base)",asp:"ASP (Base)",fx:"CNY/RUB (Base)"}[kind],
+    (p,d)=>p.scenarioData[kind]=p.scenarioData[kind].map(x=>x*(1+d))));
+  return tests.sort((a,b)=>b.spread-a.spread).slice(0,12);
+}
+
+/* =========================================================
+   6. Charts
+   ========================================================= */
+function destroy(k){if(charts[k]){charts[k].destroy();charts[k]=null}}
+function commonOpts(){
+  const text=css("--text"),muted=css("--muted"),line=css("--line");
+  return{responsive:true,maintainAspectRatio:false,animation:{duration:120},interaction:{mode:"index",intersect:false},
+    plugins:{legend:{labels:{color:text,usePointStyle:true,boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},
+    scales:{x:{ticks:{color:muted},grid:{display:false},border:{color:line}},y:{beginAtZero:true,ticks:{color:muted,callback:v=>money(v)},grid:{color:line},border:{display:false}}}};
+}
+function updateCharts(res,all,sens){
+  const blue=css("--blue"),cyan=css("--cyan"),good=css("--good"),warn=css("--warn"),bad=css("--bad"),muted=css("--muted"),text=css("--text"),line=css("--line");
+
+  destroy("pl");charts.pl=new Chart(document.getElementById("plChart"),{type:"bar",data:{labels:YEARS,datasets:[
+    {label:"Выручка",data:res.pl.map(x=>x.revenue),backgroundColor:blue,borderRadius:5},
+    {label:"Валовая прибыль",data:res.pl.map(x=>x.grossProfit),backgroundColor:cyan,borderRadius:5},
+    {label:"Чистая прибыль",data:res.pl.map(x=>x.netIncome),type:"line",borderColor:good,backgroundColor:good,tension:.2,pointRadius:4}
+  ]},options:commonOpts()});
+
+  destroy("cash");const co=commonOpts();co.scales.y.beginAtZero=false;
+  charts.cash=new Chart(document.getElementById("cashChart"),{type:"line",data:{labels:res.monthly.map(x=>MONTHS[x.month-1]+" "+String(x.year).slice(2)),datasets:[
+    {label:"Кумулятивный CF проекта",data:res.monthly.map(x=>x.cumulative),borderColor:blue,backgroundColor:"rgba(0,114,206,.08)",fill:true,tension:.16,pointRadius:0},
+    {label:"CF инвестора",data:res.investorCum,borderColor:good,tension:.16,pointRadius:res.investorCum.map((x,i)=>i===res.metrics.paybackMonths-1?6:0),pointBackgroundColor:good}
+  ]},options:co});
+
+  destroy("water");const p=res.pl[2],ranges=[[0,p.revenue],[p.grossProfit,p.revenue],[p.ebit,p.grossProfit],[p.netIncome,p.ebit],[0,p.netIncome]];
+  charts.water=new Chart(document.getElementById("waterfallChart"),{type:"bar",data:{labels:["Выручка","COGS","OPEX","Налог","Чистая прибыль"],datasets:[
+    {label:"2027",data:ranges,backgroundColor:[blue,bad,warn,bad,good],borderRadius:5}
+  ]},options:{...commonOpts(),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${money(Math.abs(c.raw[1]-c.raw[0]))}`}}}}});
+
+  destroy("scenario");charts.scenario=new Chart(document.getElementById("scenarioChart"),{type:"bar",data:{labels:["Downside","Base","Upside"],datasets:[
+    {label:"NPV",data:["Downside","Base","Upside"].map(s=>all[s].metrics.npv),backgroundColor:[bad,blue,good],borderRadius:5},
+    {label:"Чистая прибыль 2027",data:["Downside","Base","Upside"].map(s=>all[s].metrics.netIncome2027),backgroundColor:[bad+"99",blue+"99",good+"99"],borderRadius:5}
+  ]},options:commonOpts()});
+
+  destroy("sens");charts.sens=new Chart(document.getElementById("sensitivityChart"),{type:"bar",data:{labels:sens.map(x=>x.label),datasets:[
+    {label:"Δ NPV",data:sens.map(x=>[x.low,x.high]),backgroundColor:blue,borderRadius:4,borderSkipped:false}
+  ]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:100},plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:c=>`Δ NPV: ${money(c.raw[0])} … ${money(c.raw[1])}`}}},
+    scales:{x:{ticks:{color:muted,callback:v=>money(v)},grid:{color:line}},y:{ticks:{color:text,font:{size:11}},grid:{display:false}}}}});
+}
+
+/* =========================================================
+   7. Executive text / comparisons
+   ========================================================= */
+function updateCompare(res,all,sens){
+  document.getElementById("scenarioTable").innerHTML=[
+    ["NPV","npv","rub"],["IRR","irr","pct"],["Потребность в инвестициях","investmentNeed","rub"],
+    ["Gross Margin 2027","grossMargin2027","pct"],["Operating Margin 2027","operatingMargin2027","pct"],
+    ["Чистая прибыль 2027","netIncome2027","rub"]
+  ].map(([l,k,t])=>`<tr class="border-t hairline"><td class="p-3">${l}</td>${["Downside","Base","Upside"].map(s=>
+    `<td class="p-3 table-num ${s===state.scenario?"font-semibold":""}">${metricFmt(all[s].metrics[k],t)}</td>`).join("")}</tr>`).join("");
+
+  const b=baselines[state.scenario],what=[
+    ["NPV",res.metrics.npv,b.metrics.npv,"rub"],["IRR",res.metrics.irr,b.metrics.irr,"pct"],
+    ["Чистая прибыль 2027",res.metrics.netIncome2027,b.metrics.netIncome2027,"rub"]
+  ];
+  document.getElementById("whatIf").innerHTML=`<div class="overflow-hidden rounded-lg border hairline"><table class="w-full text-sm">
+    <thead><tr style="background:var(--panel2)"><th class="p-3 text-left">Метрика</th><th class="p-3 table-num">Исходно</th><th class="p-3 table-num">Сейчас</th><th class="p-3 table-num">Δ</th></tr></thead>
+    <tbody>${what.map(([l,c,bb,t])=>{const d=dPct(c,bb);return`<tr class="border-t hairline"><td class="p-3">${l}</td><td class="p-3 table-num">${metricFmt(bb,t)}</td>
+    <td class="p-3 table-num font-semibold">${metricFmt(c,t)}</td><td class="p-3 table-num ${dClass(d)}">${dText(d)}</td></tr>`}).join("")}</tbody></table></div>`;
+
+  const best=Object.entries(all).sort((a,b)=>b[1].metrics.npv-a[1].metrics.npv)[0];
+  const lever=sens[0]?.label||"ASP";
+  document.getElementById("heroTitle").textContent=state.scenario+": "+state.scenarios[state.scenario].description;
+  document.getElementById("heroText").textContent=`В 2027 модель показывает выручку ${money(res.pl[2].revenue)}, Gross Margin ${pf1.format(res.metrics.grossMargin2027)} и Operating Margin ${pf1.format(res.metrics.operatingMargin2027)}. Потребность в инвестициях — ${money(res.metrics.investmentNeed)}.`;
+  document.getElementById("investorConclusion").innerHTML=`На текущих вводных наибольший NPV среди сценариев показывает <b>${best[0]}</b> (${money(best[1].metrics.npv)}). Главный рычаг чувствительности Base — <b>${lever}</b>. Это сравнение сценариев модели, а не инвестиционная рекомендация.`;
+}
+function updatePaymentControl(res){
+  const c=state.constants;
+  document.getElementById("paymentControl").innerHTML=
+    `<div class="${Math.abs(res.checks.buyerTotal-1)<1e-8?"good":"bad"}">Покупатель: ${pf1.format(c.buyerAdvancePct)} аванс + ${pf1.format(c.buyerFinalPct)} финальный = ${pf1.format(res.checks.buyerTotal)}</div>
+     <div class="${Math.abs(res.checks.supplierTotal-1)<1e-8?"good":"bad"} mt-1">Поставщик: ${pf1.format(c.supplierAdvancePct)} аванс + ${pf1.format(c.supplierFinalPct)} финальный = ${pf1.format(res.checks.supplierTotal)}</div>
+     <div class="mt-2 ${res.checks.capacityBinding?"warn":"good"}">${res.checks.capacityBinding?"В выбранном сценарии мощность ограничивает объём.":"Ограничение мощности не активно."}</div>`;
+}
+
+/* =========================================================
+   8. Main recalculation loop
+   ========================================================= */
+function updateAll(){
+  const t0=performance.now();
+  const res=calculateModel(paramsFor());lastResults=res;
+  const all={};["Downside","Base","Upside"].forEach(s=>all[s]=calculateModel(paramsFor(s)));
+  const sens=sensitivity();
+  updateCards(res);updatePL(res);updateCF(res);updateCompare(res,all,sens);updatePaymentControl(res);updateCharts(res,all,sens);
+  document.querySelectorAll("[data-scenario]").forEach(b=>b.classList.toggle("active",b.dataset.scenario===state.scenario));
+  document.getElementById("perf").textContent=`Пересчёт: ${(performance.now()-t0).toFixed(1)} мс`;
+}
+
+/* =========================================================
+   9. Interactions
+   ========================================================= */
+document.querySelectorAll("[data-scenario]").forEach(b=>b.addEventListener("click",()=>{state.scenario=b.dataset.scenario;buildScenarioSliders();updateAll()}));
+document.getElementById("resetBtn").addEventListener("click",()=>{state.constants=structuredClone(MODEL_DATA.constants);state.scenarios=structuredClone(MODEL_DATA.scenarios);buildConstants();buildScenarioSliders();updateAll()});
+document.getElementById("themeBtn").addEventListener("click",()=>{state.theme=state.theme==="dark"?"light":"dark";localStorage.setItem("rtsw-theme",state.theme);applyTheme();updateAll()});
+document.getElementById("mobileToggle").addEventListener("click",()=>{const p=document.getElementById("controls");p.classList.toggle("mobile-collapsed");document.getElementById("mobileMark").textContent=p.classList.contains("mobile-collapsed")?"＋":"−"});
+document.getElementById("scenarioEditorToggle").addEventListener("click",e=>{const h=document.getElementById("scenarioSliders"),hide=!h.classList.contains("hidden");h.classList.toggle("hidden",hide);e.target.textContent=hide?"Развернуть":"Свернуть"});
+document.querySelectorAll(".tab-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab-content").forEach(x=>x.classList.add("hidden"));document.getElementById("tab-"+b.dataset.tab).classList.remove("hidden");setTimeout(()=>Object.values(charts).forEach(x=>x?.resize()),10)}));
+document.getElementById("exportBtn").addEventListener("click",()=>{const payload={exportedAt:new Date().toISOString(),activeScenario:state.scenario,constants:state.constants,scenarios:state.scenarios,results:lastResults};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`RTSW7000_${state.scenario}_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)});
+
+function applyTheme(){document.documentElement.classList.toggle("dark",state.theme==="dark")}
+
+applyTheme();buildConstants();buildScenarioSliders();updateAll();
+</script>
+</body>
+</html>
