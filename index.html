@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RTSW-7000-28F-DC-DC — Interactive Financial Model</title>
+  <title>RTSW-7000-28F-DC-DC — интерактивная финансовая модель</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script>
@@ -20,12 +20,12 @@
     :root{
       --bg:#f4f7f9;--panel:#fff;--panel2:#edf4f8;--text:#071a2b;--muted:#667b8b;
       --line:#dbe5ea;--blue:#0072ce;--cyan:#00a8e8;--navy:#0b2d4d;
-      --good:#158f72;--warn:#d49a16;--bad:#c74b50;
+      --good:#158f72;--warn:#d49a16;--bad:#c74b50;--scenario-primary:#0072ce;--scenario-secondary:#00a8e8;--scenario-soft:#eaf5fb;
     }
     .dark{
       --bg:#07131f;--panel:#0d2133;--panel2:#102a40;--text:#f4f8fb;--muted:#9eb1bf;
       --line:#213b50;--blue:#39a9ff;--cyan:#43d4ff;--navy:#07131f;
-      --good:#37c69a;--warn:#f2bc49;--bad:#ff7f86;
+      --good:#37c69a;--warn:#f2bc49;--bad:#ff7f86;--scenario-primary:#39a9ff;--scenario-secondary:#43d4ff;--scenario-soft:#102a40;
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
@@ -45,11 +45,11 @@
       box-shadow:0 2px 7px rgba(0,0,0,.18);cursor:pointer}
     .slider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:4px solid var(--blue);
       box-shadow:0 2px 7px rgba(0,0,0,.18);cursor:pointer}
-    .scenario-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 7px 18px rgba(0,114,206,.22)}
+    .scenario-btn.active{background:var(--scenario-primary);color:#fff;border-color:var(--scenario-primary);box-shadow:0 7px 18px color-mix(in srgb,var(--scenario-primary) 28%,transparent)}
     .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-    .metric{min-height:132px;position:relative;overflow:hidden}
+    .metric{min-height:132px;position:relative;overflow:hidden;border-top:3px solid var(--scenario-primary)}
     .metric:after{content:"";position:absolute;right:-34px;top:-34px;width:88px;height:88px;border-radius:50%;
-      background:rgba(0,114,206,.06)}
+      background:color-mix(in srgb,var(--scenario-primary) 10%,transparent)}
     .good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
     .good-bg{background:rgba(21,143,114,.11);color:var(--good)}
     .warn-bg{background:rgba(212,154,22,.12);color:var(--warn)}
@@ -62,6 +62,33 @@
     .mobile-collapsed .controls-body{display:none}
     @media(min-width:1024px){.mobile-collapsed .controls-body{display:block}}
     @media print{aside,#actions,.scenario-editor{display:none!important}main{width:100%!important}.panel{box-shadow:none}}
+  
+    .scenario-hero{border-left:4px solid var(--scenario-primary)}
+    .scenario-dot{width:9px;height:9px;border-radius:999px;background:var(--scenario-primary);display:inline-block}
+    .scenario-chip{background:color-mix(in srgb,var(--scenario-primary) 10%,var(--panel));color:var(--scenario-primary);
+      border:1px solid color-mix(in srgb,var(--scenario-primary) 25%,var(--line))}
+    @media(max-width:1023px){
+      header{position:sticky}
+      #actions{width:100%}
+      #actions>div:first-child{flex:1;min-width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+      .scenario-btn{width:100%}
+    }
+    @media(max-width:640px){
+      body{font-size:14px}
+      .metric{min-height:112px}
+      .metric .text-xl{font-size:1.05rem}
+      .tab-btn{flex:1 1 100%;text-align:center}
+      table{min-width:720px}
+      .scenario-editor{padding-bottom:1.25rem}
+    }
+
+  
+    .scenario-btn[data-scenario="Downside"]{--btn:#66548E}
+    .scenario-btn[data-scenario="Base"]{--btn:#0072CE}
+    .scenario-btn[data-scenario="Upside"]{--btn:#007C73}
+    .scenario-btn:not(.active){color:var(--btn);border-color:color-mix(in srgb,var(--btn) 28%,var(--line));
+      background:color-mix(in srgb,var(--btn) 5%,var(--panel))}
+
   </style>
 </head>
 <body>
@@ -71,7 +98,7 @@
     <div class="max-w-[1800px] mx-auto px-4 lg:px-6 py-3">
       <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <div class="eyebrow">Interactive investment model · 2025–2027</div>
+          <div class="eyebrow">Интерактивная инвестиционная модель · 2025–2027</div>
           <div class="flex items-baseline gap-3 mt-1">
             <h1 class="text-xl md:text-2xl font-semibold tracking-tight">RTSW-7000-28F-DC-DC</h1>
             <span class="hidden md:inline muted text-sm">финансовая модель продукта</span>
@@ -79,12 +106,12 @@
         </div>
         <div id="actions" class="flex flex-wrap gap-2 items-center">
           <div class="flex gap-1 p-1 rounded-xl border hairline" style="background:var(--panel2)">
-            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Downside">Downside</button>
-            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Base">Base</button>
-            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Upside">Upside</button>
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Downside">Негативный</button>
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Base">Базовый</button>
+            <button class="scenario-btn px-3 py-2 rounded-lg text-sm border border-transparent" data-scenario="Upside">Позитивный</button>
           </div>
           <button id="resetBtn" class="px-3 py-2 rounded-xl border hairline text-sm font-medium">Сбросить все параметры</button>
-          <button id="exportBtn" class="px-3 py-2 rounded-xl text-white text-sm font-medium" style="background:var(--navy)">Экспорт JSON</button>
+          <button id="exportBtn" class="px-3 py-2 rounded-xl text-white text-sm font-medium" style="background:var(--navy)">Экспорт данных JSON</button>
           <button id="themeBtn" class="w-10 h-10 rounded-xl border hairline" title="Светлая / тёмная тема">◐</button>
         </div>
       </div>
@@ -111,19 +138,14 @@
           </div>
           <div id="scenarioSliders" class="space-y-5 mt-4"></div>
         </div>
-
-        <div class="p-4 border-t hairline text-xs">
-          <div class="font-semibold mb-2">Контроль платежных условий</div>
-          <div id="paymentControl" class="muted leading-relaxed"></div>
-        </div>
       </div>
     </aside>
 
     <main class="min-w-0 space-y-5">
-      <section class="panel rounded-2xl p-5 md:p-6 soft-grid">
+      <section class="panel scenario-hero rounded-2xl p-5 md:p-6 soft-grid">
         <div class="grid lg:grid-cols-[1.2fr_.8fr] gap-5">
           <div>
-            <div class="eyebrow">Executive view</div>
+            <div class="eyebrow">Краткий обзор</div>
             <h2 id="heroTitle" class="text-2xl md:text-3xl font-semibold mt-2 tracking-tight"></h2>
             <p id="heroText" class="muted mt-3 leading-relaxed max-w-4xl"></p>
           </div>
@@ -144,31 +166,31 @@
 
       <section class="panel rounded-2xl overflow-hidden">
         <div class="p-3 border-b hairline flex flex-wrap gap-2">
-          <button class="tab-btn active px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="pl">P&L</button>
-          <button class="tab-btn px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="cf">Cash Flow</button>
+          <button class="tab-btn active px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="pl">Отчет о прибылях и убытках</button>
+          <button class="tab-btn px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="cf">Денежный поток</button>
           <button class="tab-btn px-4 py-2 rounded-xl border hairline text-sm font-medium" data-tab="compare">Сравнение сценариев</button>
         </div>
 
         <div id="tab-pl" class="tab-content p-4 md:p-5 space-y-5">
           <div class="subpanel rounded-xl px-4 py-3 text-xs muted">
-            Платёжные доли и сроки не меняют P&L по методу начисления, но модель всё равно полностью пересчитывает P&L и CF для каждого сценария.
+            Платёжные доли и сроки не меняют отчет о прибылях и убытках по методу начисления, но модель полностью пересчитывает отчет о прибылях и убытках и денежный поток для каждого сценария.
             Их экономический эффект проявляется в ликвидности, NPV, IRR, потребности в инвестициях и окупаемости.
           </div>
           <div class="grid xl:grid-cols-2 gap-5">
             <div class="subpanel rounded-xl p-4">
               <div class="font-semibold">Выручка и прибыль</div>
               <div class="text-xs muted mt-1">Все ряды в рублях, одна шкала</div>
-              <div class="h-[320px] mt-3"><canvas id="plChart"></canvas></div>
+              <div class="h-[280px] sm:h-[320px] mt-3"><canvas id="plChart"></canvas></div>
             </div>
             <div class="subpanel rounded-xl p-4">
-              <div class="font-semibold">Waterfall 2027</div>
-              <div class="text-xs muted mt-1">От выручки к чистой прибыли</div>
-              <div class="h-[320px] mt-3"><canvas id="waterfallChart"></canvas></div>
+              <div class="font-semibold">Мост прибыли 2027</div>
+              <div class="text-xs muted mt-1">Переход от выручки к чистой прибыли</div>
+              <div class="h-[280px] sm:h-[320px] mt-3"><canvas id="waterfallChart"></canvas></div>
             </div>
           </div>
           <div class="overflow-auto rounded-xl border hairline">
             <table class="w-full text-sm">
-              <thead class="sticky-head"><tr><th class="p-3 text-left">P&L</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
+              <thead class="sticky-head"><tr><th class="p-3 text-left">Отчет о прибылях и убытках</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
               <tbody id="plTable"></tbody>
             </table>
           </div>
@@ -177,9 +199,9 @@
         <div id="tab-cf" class="tab-content hidden p-4 md:p-5 space-y-5">
           <div class="grid xl:grid-cols-[1.35fr_.65fr] gap-5">
             <div class="subpanel rounded-xl p-4">
-              <div class="font-semibold">Кумулятивный Cash Flow</div>
+              <div class="font-semibold">Накопленный денежный поток</div>
               <div class="text-xs muted mt-1">Помесячный расчёт с лагами платежей и точкой окупаемости</div>
-              <div class="h-[360px] mt-3"><canvas id="cashChart"></canvas></div>
+              <div class="h-[300px] sm:h-[360px] mt-3"><canvas id="cashChart"></canvas></div>
             </div>
             <div class="subpanel rounded-xl p-4">
               <div class="font-semibold">Ликвидность</div>
@@ -188,7 +210,7 @@
           </div>
           <div class="overflow-auto rounded-xl border hairline">
             <table class="w-full text-sm">
-              <thead class="sticky-head"><tr><th class="p-3 text-left">Cash Flow</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
+              <thead class="sticky-head"><tr><th class="p-3 text-left">Денежный поток</th><th class="p-3 table-num">2025</th><th class="p-3 table-num">2026</th><th class="p-3 table-num">2027</th></tr></thead>
               <tbody id="cfTable"></tbody>
             </table>
           </div>
@@ -199,12 +221,12 @@
             <div class="subpanel rounded-xl p-4">
               <div class="font-semibold">Сравнение сценариев</div>
               <div class="text-xs muted mt-1">NPV и чистая прибыль 2027</div>
-              <div class="h-[320px] mt-3"><canvas id="scenarioChart"></canvas></div>
+              <div class="h-[280px] sm:h-[320px] mt-3"><canvas id="scenarioChart"></canvas></div>
             </div>
             <div class="subpanel rounded-xl p-4">
-              <div class="font-semibold">Чувствительность NPV Base</div>
-              <div class="text-xs muted mt-1">Tornado: изменение каждого драйвера на ±10%</div>
-              <div class="h-[430px] mt-3"><canvas id="sensitivityChart"></canvas></div>
+              <div class="font-semibold">Чувствительность NPV базового сценария</div>
+              <div class="text-xs muted mt-1">Диаграмма чувствительности: изменение каждого драйвера на ±10%</div>
+              <div class="h-[340px] sm:h-[430px] mt-3"><canvas id="sensitivityChart"></canvas></div>
             </div>
           </div>
 
@@ -216,7 +238,7 @@
             </div>
             <div class="overflow-auto rounded-xl border hairline">
               <table class="w-full text-sm">
-                <thead class="sticky-head"><tr><th class="p-3 text-left">Показатель</th><th class="p-3 table-num">Downside</th><th class="p-3 table-num">Base</th><th class="p-3 table-num">Upside</th></tr></thead>
+                <thead class="sticky-head"><tr><th class="p-3 text-left">Показатель</th><th class="p-3 table-num">Негативный</th><th class="p-3 table-num">Базовый</th><th class="p-3 table-num">Позитивный</th></tr></thead>
                 <tbody id="scenarioTable"></tbody>
               </table>
             </div>
@@ -229,7 +251,7 @@
         <p class="text-sm muted mt-2 leading-relaxed">
           Реализуемый объём ограничивается производственной мощностью; изменение конверсии масштабирует объём относительно базовых 85%.
           Производственный цикл масштабирует эффективную месячную мощность относительно базовых 20 дней.
-          Потребность в инвестициях равна максимальному отрицательному накопленному CF.
+          Потребность в инвестициях равна максимальному отрицательному накопленному денежному потоку.
           NPV рассчитывается при 20%, IRR — по тем же денежным потокам.
           Авансовые платежи, попавшие на выходной, сдвигаются на предыдущую пятницу; финальные — на следующий понедельник.
           Платежи, которые по графику должны были произойти до 01.01.2025, отражаются 01.01.2025 как стартовая потребность/источник финансирования.
@@ -263,25 +285,66 @@ const MODEL_DATA = {
   scenarios:{
     Downside:{
       volume:[2850,2280,2394], asp:[50000,47500,50000], fx:[11.1592,13.5,14.5],
-      description:"Давление на цену и спрос при ослаблении рубля."
+      description:"Снижение спроса и ценовое давление при одновременном ослаблении рубля."
     },
     Base:{
       volume:[2850,3135,3449], asp:[50000,55000,60500], fx:[11.1592,12.4,13.02],
-      description:"Умеренный рост операторского спроса и индексация цены."
+      description:"Умеренный рост спроса со стороны операторов связи и плановая индексация цены."
     },
     Upside:{
       volume:[2850,3420,4104], asp:[50000,60000,66000], fx:[11.1592,11.5,11.5],
-      description:"Ускорение продаж, более высокая цена и стабильный рубль."
+      description:"Ускорение продаж, более высокая цена реализации и благоприятный валютный курс."
     }
   }
 };
 
 const YEARS=[2025,2026,2027];
 const MONTHS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+const SCENARIO_META={
+  Downside:{
+    label:"Негативный",
+    primary:"#66548E",
+    secondary:"#C65D7B",
+    soft:"#F3EDF7",
+    darkPrimary:"#A993E0",
+    darkSecondary:"#F0839D"
+  },
+  Base:{
+    label:"Базовый",
+    primary:"#0072CE",
+    secondary:"#00A8E8",
+    soft:"#EAF5FB",
+    darkPrimary:"#39A9FF",
+    darkSecondary:"#43D4FF"
+  },
+  Upside:{
+    label:"Позитивный",
+    primary:"#007C73",
+    secondary:"#55BFAE",
+    soft:"#E8F6F3",
+    darkPrimary:"#46C7B7",
+    darkSecondary:"#77DDCC"
+  }
+};
+function scenarioLabel(key){return SCENARIO_META[key]?.label||key}
+function scenarioPalette(key){
+  const m=SCENARIO_META[key]||SCENARIO_META.Base;
+  return state.theme==="dark"
+    ? {primary:m.darkPrimary,secondary:m.darkSecondary}
+    : {primary:m.primary,secondary:m.secondary};
+}
+function applyScenarioTheme(){
+  const meta=SCENARIO_META[state.scenario]||SCENARIO_META.Base;
+  const dark=state.theme==="dark";
+  document.documentElement.style.setProperty("--scenario-primary",dark?meta.darkPrimary:meta.primary);
+  document.documentElement.style.setProperty("--scenario-secondary",dark?meta.darkSecondary:meta.secondary);
+  document.documentElement.style.setProperty("--scenario-soft",dark?"#102a40":meta.soft);
+}
+
 
 const PARAM_DEFS=[
   {key:"bomCNY",label:"BOM коммутатора",unit:"CNY/шт.",min:700,max:2600,step:50,fmt:"n"},
-  {key:"sfpCogsRUB",label:"COGS SFP-комплекта",unit:"руб./шт.",min:8000,max:40000,step:2000,fmt:"rub"},
+  {key:"sfpCogsRUB",label:"себестоимость SFP-комплекта",unit:"руб./шт.",min:8000,max:40000,step:2000,fmt:"rub"},
   {key:"royaltyPct",label:"Роялти",unit:"% выручки",min:0,max:.12,step:.01,fmt:"pct"},
   {key:"capacityMonthly",label:"Производственная мощность",unit:"шт./мес.",min:150,max:600,step:10,fmt:"n"},
   {key:"conversion",label:"Конверсия заказов в поставки",unit:"%",min:.50,max:1,step:.05,fmt:"pct"},
@@ -453,7 +516,7 @@ function calculateModel(params){
   const minCash=Math.min(0,...monthly.map(x=>x.cumulative));
   const investmentNeed=Math.max(0,-minCash);
 
-  // CF инвестора: сначала покрывает начальную потребность, затем получает/теряет месячный CF проекта.
+  // Денежный поток инвестора: сначала покрывает начальную потребность, затем получает/теряет месячный CF проекта.
   let invCum=-investmentNeed,paybackIndex=-1;
   const investorCum=monthly.map((x,i)=>{
     invCum+=x.netCF;
@@ -530,7 +593,7 @@ function buildConstants(){
 }
 function buildScenarioSliders(){
   const s=state.scenario,sc=state.scenarios[s];
-  document.getElementById("scenarioEditorTitle").textContent=s;
+  document.getElementById("scenarioEditorTitle").textContent=scenarioLabel(s);
   let html="";
   SCENARIO_DEFS.forEach(def=>YEARS.forEach((y,i)=>{
     const base=MODEL_DATA.scenarios[s][def.kind][i];
@@ -563,18 +626,18 @@ function updatePL(res){
     row("Выручка",p.map(x=>x.revenue),{bold:true}),
     `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Себестоимость</td></tr>`,
     row("BOM коммутатора",p.map(x=>x.bom),{indent:true}),
-    row("SFP COGS",p.map(x=>x.sfp),{indent:true}),
+    row("SFP себестоимость",p.map(x=>x.sfp),{indent:true}),
     row("Роялти",p.map(x=>x.royalty),{indent:true}),
-    row("Итого COGS",p.map(x=>x.totalCogs),{bold:true}),
+    row("Итого себестоимость",p.map(x=>x.totalCogs),{bold:true}),
     row("Валовая прибыль",p.map(x=>x.grossProfit),{bold:true}),
-    row("Gross Margin",p.map(x=>x.grossMargin),{pct:true}),
+    row("Валовая рентабельность",p.map(x=>x.grossMargin),{pct:true}),
     `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Операционные расходы</td></tr>`,
     row("Постоянные OPEX",p.map(x=>x.opex),{indent:true}),
     row("EBIT",p.map(x=>x.ebit),{bold:true}),
-    row("Operating Margin",p.map(x=>x.operatingMargin),{pct:true}),
+    row("Операционная рентабельность",p.map(x=>x.operatingMargin),{pct:true}),
     row("Налог",p.map(x=>x.tax)),
     row("Чистая прибыль",p.map(x=>x.netIncome),{bold:true}),
-    row("Net Margin",p.map(x=>x.netMargin),{pct:true})
+    row("Рентабельность по чистой прибыли",p.map(x=>x.netMargin),{pct:true})
   ].join("");
 }
 function updateCF(res){
@@ -589,12 +652,12 @@ function updateCF(res){
     row("Чистый операционный CF",c.map(x=>x.operatingCF),{bold:true}),
     `<tr class="border-t hairline" style="background:var(--panel2)"><td class="p-3 font-semibold" colspan="4">Инвестиционная деятельность</td></tr>`,
     row("CAPEX",[0,0,0]),row("Чистый инвестиционный CF",[0,0,0],{bold:true}),
-    row("Net Cash Flow",c.map(x=>x.netCF),{bold:true})
+    row("Чистый денежный поток",c.map(x=>x.netCF),{bold:true})
   ].join("");
   document.getElementById("liquiditySummary").innerHTML=[
     ["Минимальный cash balance",money(res.metrics.minCash),res.metrics.minCash<0?"bad":"good"],
     ["Потребность в инвестициях",money(res.metrics.investmentNeed),res.metrics.investmentNeed>15000000?"bad":"warn"],
-    ["Cash на конец 2027",money(res.metrics.endingCash),res.metrics.endingCash>0?"good":"bad"],
+    ["Денежные средства на конец 2027",money(res.metrics.endingCash),res.metrics.endingCash>0?"good":"bad"],
     ["Окупаемость",metricFmt(res.metrics.paybackMonths,"months"),res.metrics.paybackMonths<=18?"good":"warn"],
     ["Месяц окупаемости",metricFmt(res.metrics.paybackDate,"date"),res.metrics.paybackDate?"good":"bad"]
   ].map(([l,v,s])=>`<div class="flex justify-between gap-3 py-2 border-b hairline"><span class="muted text-sm">${l}</span><b class="${s} text-sm">${v}</b></div>`).join("");
@@ -615,8 +678,8 @@ function updateCards(res){
     ["irr","IRR",res.metrics.irr,"pct",b.metrics.irr,false],
     ["payback","Окупаемость",res.metrics.paybackMonths,"months",b.metrics.paybackMonths,true],
     ["investment","Потребность в инвестициях",res.metrics.investmentNeed,"rub",b.metrics.investmentNeed,true],
-    ["gm","Gross Margin 2027",res.metrics.grossMargin2027,"pct",b.metrics.grossMargin2027,false],
-    ["om","Operating Margin 2027",res.metrics.operatingMargin2027,"pct",b.metrics.operatingMargin2027,false],
+    ["gm","Валовая рентабельность 2027",res.metrics.grossMargin2027,"pct",b.metrics.grossMargin2027,false],
+    ["om","Операционная рентабельность 2027",res.metrics.operatingMargin2027,"pct",b.metrics.operatingMargin2027,false],
     ["ni","Чистая прибыль 2027",res.metrics.netIncome2027,"rub",b.metrics.netIncome2027,false]
   ];
   document.getElementById("metricCards").innerHTML=arr.map(([k,l,v,t,bv,inv])=>{
@@ -645,7 +708,7 @@ function sensitivity(){
     v=Math.max(def.min,Math.min(def.max,v));p.constants[def.key]=v;
     if(def.pair)p.constants[def.pair]=1-v;
   }));
-  ["volume","asp","fx"].forEach(kind=>test({volume:"Объём продаж (Base)",asp:"ASP (Base)",fx:"CNY/RUB (Base)"}[kind],
+  ["volume","asp","fx"].forEach(kind=>test({volume:"Объём продаж (базовый сценарий)",asp:"Цена реализации (базовый сценарий)",fx:"Курс CNY/RUB (базовый сценарий)"}[kind],
     (p,d)=>p.scenarioData[kind]=p.scenarioData[kind].map(x=>x*(1+d))));
   return tests.sort((a,b)=>b.spread-a.spread).slice(0,12);
 }
@@ -661,7 +724,7 @@ function commonOpts(){
     scales:{x:{ticks:{color:muted},grid:{display:false},border:{color:line}},y:{beginAtZero:true,ticks:{color:muted,callback:v=>money(v)},grid:{color:line},border:{display:false}}}};
 }
 function updateCharts(res,all,sens){
-  const blue=css("--blue"),cyan=css("--cyan"),good=css("--good"),warn=css("--warn"),bad=css("--bad"),muted=css("--muted"),text=css("--text"),line=css("--line");
+  const activePalette=scenarioPalette(state.scenario),blue=activePalette.primary,cyan=activePalette.secondary,good=css("--good"),warn=css("--warn"),bad=css("--bad"),muted=css("--muted"),text=css("--text"),line=css("--line");
 
   destroy("pl");charts.pl=new Chart(document.getElementById("plChart"),{type:"bar",data:{labels:YEARS,datasets:[
     {label:"Выручка",data:res.pl.map(x=>x.revenue),backgroundColor:blue,borderRadius:5},
@@ -671,22 +734,26 @@ function updateCharts(res,all,sens){
 
   destroy("cash");const co=commonOpts();co.scales.y.beginAtZero=false;
   charts.cash=new Chart(document.getElementById("cashChart"),{type:"line",data:{labels:res.monthly.map(x=>MONTHS[x.month-1]+" "+String(x.year).slice(2)),datasets:[
-    {label:"Кумулятивный CF проекта",data:res.monthly.map(x=>x.cumulative),borderColor:blue,backgroundColor:"rgba(0,114,206,.08)",fill:true,tension:.16,pointRadius:0},
-    {label:"CF инвестора",data:res.investorCum,borderColor:good,tension:.16,pointRadius:res.investorCum.map((x,i)=>i===res.metrics.paybackMonths-1?6:0),pointBackgroundColor:good}
+    {label:"Накопленный денежный поток проекта",data:res.monthly.map(x=>x.cumulative),borderColor:blue,backgroundColor:"rgba(0,114,206,.08)",fill:true,tension:.16,pointRadius:0},
+    {label:"Накопленный денежный поток инвестора",data:res.investorCum,borderColor:good,tension:.16,pointRadius:res.investorCum.map((x,i)=>i===res.metrics.paybackMonths-1?6:0),pointBackgroundColor:good}
   ]},options:co});
 
   destroy("water");const p=res.pl[2],ranges=[[0,p.revenue],[p.grossProfit,p.revenue],[p.ebit,p.grossProfit],[p.netIncome,p.ebit],[0,p.netIncome]];
-  charts.water=new Chart(document.getElementById("waterfallChart"),{type:"bar",data:{labels:["Выручка","COGS","OPEX","Налог","Чистая прибыль"],datasets:[
+  charts.water=new Chart(document.getElementById("waterfallChart"),{type:"bar",data:{labels:["Выручка","себестоимость","OPEX","Налог","Чистая прибыль"],datasets:[
     {label:"2027",data:ranges,backgroundColor:[blue,bad,warn,bad,good],borderRadius:5}
   ]},options:{...commonOpts(),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${money(Math.abs(c.raw[1]-c.raw[0]))}`}}}}});
 
-  destroy("scenario");charts.scenario=new Chart(document.getElementById("scenarioChart"),{type:"bar",data:{labels:["Downside","Base","Upside"],datasets:[
-    {label:"NPV",data:["Downside","Base","Upside"].map(s=>all[s].metrics.npv),backgroundColor:[bad,blue,good],borderRadius:5},
-    {label:"Чистая прибыль 2027",data:["Downside","Base","Upside"].map(s=>all[s].metrics.netIncome2027),backgroundColor:[bad+"99",blue+"99",good+"99"],borderRadius:5}
+  destroy("scenario");
+  const scenarioKeys=["Downside","Base","Upside"];
+  const scenarioColors=scenarioKeys.map(s=>scenarioPalette(s).primary);
+  const scenarioColorsSoft=scenarioKeys.map(s=>scenarioPalette(s).secondary);
+  charts.scenario=new Chart(document.getElementById("scenarioChart"),{type:"bar",data:{labels:scenarioKeys.map(scenarioLabel),datasets:[
+    {label:"NPV",data:scenarioKeys.map(s=>all[s].metrics.npv),backgroundColor:scenarioColors,borderRadius:6},
+    {label:"Чистая прибыль 2027",data:scenarioKeys.map(s=>all[s].metrics.netIncome2027),backgroundColor:scenarioColorsSoft,borderRadius:6}
   ]},options:commonOpts()});
 
   destroy("sens");charts.sens=new Chart(document.getElementById("sensitivityChart"),{type:"bar",data:{labels:sens.map(x=>x.label),datasets:[
-    {label:"Δ NPV",data:sens.map(x=>[x.low,x.high]),backgroundColor:blue,borderRadius:4,borderSkipped:false}
+    {label:"Δ NPV",data:sens.map(x=>[x.low,x.high]),backgroundColor:scenarioPalette("Base").primary,borderRadius:4,borderSkipped:false}
   ]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:100},plugins:{legend:{display:false},
     tooltip:{callbacks:{label:c=>`Δ NPV: ${money(c.raw[0])} … ${money(c.raw[1])}`}}},
     scales:{x:{ticks:{color:muted,callback:v=>money(v)},grid:{color:line}},y:{ticks:{color:text,font:{size:11}},grid:{display:false}}}}});
@@ -698,7 +765,7 @@ function updateCharts(res,all,sens){
 function updateCompare(res,all,sens){
   document.getElementById("scenarioTable").innerHTML=[
     ["NPV","npv","rub"],["IRR","irr","pct"],["Потребность в инвестициях","investmentNeed","rub"],
-    ["Gross Margin 2027","grossMargin2027","pct"],["Operating Margin 2027","operatingMargin2027","pct"],
+    ["Валовая рентабельность 2027","grossMargin2027","pct"],["Операционная рентабельность 2027","operatingMargin2027","pct"],
     ["Чистая прибыль 2027","netIncome2027","rub"]
   ].map(([l,k,t])=>`<tr class="border-t hairline"><td class="p-3">${l}</td>${["Downside","Base","Upside"].map(s=>
     `<td class="p-3 table-num ${s===state.scenario?"font-semibold":""}">${metricFmt(all[s].metrics[k],t)}</td>`).join("")}</tr>`).join("");
@@ -714,16 +781,20 @@ function updateCompare(res,all,sens){
 
   const best=Object.entries(all).sort((a,b)=>b[1].metrics.npv-a[1].metrics.npv)[0];
   const lever=sens[0]?.label||"ASP";
-  document.getElementById("heroTitle").textContent=state.scenario+": "+state.scenarios[state.scenario].description;
-  document.getElementById("heroText").textContent=`В 2027 модель показывает выручку ${money(res.pl[2].revenue)}, Gross Margin ${pf1.format(res.metrics.grossMargin2027)} и Operating Margin ${pf1.format(res.metrics.operatingMargin2027)}. Потребность в инвестициях — ${money(res.metrics.investmentNeed)}.`;
-  document.getElementById("investorConclusion").innerHTML=`На текущих вводных наибольший NPV среди сценариев показывает <b>${best[0]}</b> (${money(best[1].metrics.npv)}). Главный рычаг чувствительности Base — <b>${lever}</b>. Это сравнение сценариев модели, а не инвестиционная рекомендация.`;
+  document.getElementById("heroTitle").textContent=scenarioLabel(state.scenario)+": "+state.scenarios[state.scenario].description;
+  document.getElementById("heroText").textContent=`В 2027 модель показывает выручку ${money(res.pl[2].revenue)}, Валовая рентабельность ${pf1.format(res.metrics.grossMargin2027)} и Операционная рентабельность ${pf1.format(res.metrics.operatingMargin2027)}. Потребность в инвестициях — ${money(res.metrics.investmentNeed)}.`;
+  document.getElementById("investorConclusion").innerHTML=`На текущих вводных наибольший NPV среди сценариев показывает <b>${scenarioLabel(best[0])}</b> (${money(best[1].metrics.npv)}). Главный рычаг чувствительности Базовый — <b>${lever}</b>. Это сравнение сценариев модели, а не инвестиционная рекомендация.`;
 }
-function updatePaymentControl(res){
+function validatePaymentControls(){
+  // Скрытый контроль: доли всегда должны суммироваться до 100%.
+  // При любом рассогласовании финальная доля автоматически становится дополнением к авансу.
   const c=state.constants;
-  document.getElementById("paymentControl").innerHTML=
-    `<div class="${Math.abs(res.checks.buyerTotal-1)<1e-8?"good":"bad"}">Покупатель: ${pf1.format(c.buyerAdvancePct)} аванс + ${pf1.format(c.buyerFinalPct)} финальный = ${pf1.format(res.checks.buyerTotal)}</div>
-     <div class="${Math.abs(res.checks.supplierTotal-1)<1e-8?"good":"bad"} mt-1">Поставщик: ${pf1.format(c.supplierAdvancePct)} аванс + ${pf1.format(c.supplierFinalPct)} финальный = ${pf1.format(res.checks.supplierTotal)}</div>
-     <div class="mt-2 ${res.checks.capacityBinding?"warn":"good"}">${res.checks.capacityBinding?"В выбранном сценарии мощность ограничивает объём.":"Ограничение мощности не активно."}</div>`;
+  if(Math.abs(c.buyerAdvancePct+c.buyerFinalPct-1)>1e-10)c.buyerFinalPct=1-c.buyerAdvancePct;
+  if(Math.abs(c.supplierAdvancePct+c.supplierFinalPct-1)>1e-10)c.supplierFinalPct=1-c.supplierAdvancePct;
+  return {
+    buyerTotal:c.buyerAdvancePct+c.buyerFinalPct,
+    supplierTotal:c.supplierAdvancePct+c.supplierFinalPct
+  };
 }
 
 /* =========================================================
@@ -731,10 +802,12 @@ function updatePaymentControl(res){
    ========================================================= */
 function updateAll(){
   const t0=performance.now();
+  validatePaymentControls();
+  applyScenarioTheme();
   const res=calculateModel(paramsFor());lastResults=res;
   const all={};["Downside","Base","Upside"].forEach(s=>all[s]=calculateModel(paramsFor(s)));
   const sens=sensitivity();
-  updateCards(res);updatePL(res);updateCF(res);updateCompare(res,all,sens);updatePaymentControl(res);updateCharts(res,all,sens);
+  updateCards(res);updatePL(res);updateCF(res);updateCompare(res,all,sens);updateCharts(res,all,sens);
   document.querySelectorAll("[data-scenario]").forEach(b=>b.classList.toggle("active",b.dataset.scenario===state.scenario));
   document.getElementById("perf").textContent=`Пересчёт: ${(performance.now()-t0).toFixed(1)} мс`;
 }
@@ -750,7 +823,7 @@ document.getElementById("scenarioEditorToggle").addEventListener("click",e=>{con
 document.querySelectorAll(".tab-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab-content").forEach(x=>x.classList.add("hidden"));document.getElementById("tab-"+b.dataset.tab).classList.remove("hidden");setTimeout(()=>Object.values(charts).forEach(x=>x?.resize()),10)}));
 document.getElementById("exportBtn").addEventListener("click",()=>{const payload={exportedAt:new Date().toISOString(),activeScenario:state.scenario,constants:state.constants,scenarios:state.scenarios,results:lastResults};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`RTSW7000_${state.scenario}_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)});
 
-function applyTheme(){document.documentElement.classList.toggle("dark",state.theme==="dark")}
+function applyTheme(){document.documentElement.classList.toggle("dark",state.theme==="dark");applyScenarioTheme()}
 
 applyTheme();buildConstants();buildScenarioSliders();updateAll();
 </script>
